@@ -1,0 +1,133 @@
+from collections import Counter
+from supermarkt import Supermarkt
+from datetime import datetime, timedelta
+import matplotlib.pyplot as plt
+import pandas as pd
+from produkt_db import ProduktDB, produkt_db
+
+class Main:
+    def __init__(self):
+        self.supermarkt = Supermarkt("MeinSupermarkt")
+        self.kunden_statistiken = pd.DataFrame(
+            columns=["Stunde", "GrossEinkaufsKunde", "KleinEinkaufsKunde", "SpontanEinkaufsKunde"])
+        self.gesamtumsatz_statistik = pd.DataFrame(columns=["Datum", "Gesamtumsatz"])
+
+    def starte_simulation(self):
+        self.supermarkt.setze_uhrzeit(datetime(2024, 1, 10, 7,0, 0))
+
+        letzte_stunde = -1  # Variable, um die letzte Stunde zu verfolgen
+        print(f"Es ist 7 Uhr, der Markt öffnet.")
+        while self.supermarkt.uhrzeit.hour < 23:
+            aktuelle_stunde = self.supermarkt.uhrzeit.hour
+
+            if aktuelle_stunde != letzte_stunde:
+                großeinkauf, kleineinkauf, spontaneinkauf = self.supermarkt.kunden_generieren()
+                anzahl_kunden = großeinkauf + kleineinkauf + spontaneinkauf
+                kunden_abstand = self.supermarkt.berechne_kunden_abstand(anzahl_kunden)
+
+                # Speichern Sie die Daten für die aktuelle Stunde
+                self.kunden_statistiken = pd.concat([self.kunden_statistiken, pd.DataFrame({
+                    "Stunde": [aktuelle_stunde],
+                    "GrossEinkaufsKunde": [großeinkauf],
+                    "KleinEinkaufsKunde": [kleineinkauf],
+                    "SpontanEinkaufsKunde": [spontaneinkauf],
+                })], ignore_index=True)
+
+                letzte_stunde = aktuelle_stunde
+
+            # Generiere die Kunden nur einmal pro Stunde
+            kunden = self.supermarkt.generiere_kunden_fuer_stunde(großeinkauf, kleineinkauf, spontaneinkauf, kunden_abstand, anzahl_kunden)
+            self.supermarkt.betrete_kunden_in_supermarkt(kunden, kunden_abstand, großeinkauf, kleineinkauf, spontaneinkauf)
+
+            # Fortschreiten der Uhrzeit
+            self.supermarkt.setze_uhrzeit(self.supermarkt.uhrzeit + timedelta(minutes=1))
+
+    def zeige_statistiken(self):
+        if self.kunden_statistiken.empty:
+            print("Keine Kundenstatistiken vorhanden.")
+            return
+
+        print("Kundenstatistiken:")
+        print(self.kunden_statistiken)
+
+        # Erstelle ein Säulendiagramm
+        self.kunden_statistiken.set_index("Stunde").plot(kind="bar", stacked=True)
+        plt.xlabel("Stunde")
+        plt.ylabel("Anzahl Kunden")
+        plt.title("Kundenstatistiken pro Stunde")
+        plt.show()
+
+        # Speichern der Statistiken in einer CSV-Datei
+        csv_datei_name = "kunden_statistiken.csv"
+        self.kunden_statistiken.to_csv(csv_datei_name, index=False)
+        #self.kunden_statistiken.to_csv("kunden_statistiken.csv", index=False)
+        print(f"Die Daten wurden in die CSV-Datei '{csv_datei_name}' exportiert.")
+
+        # Speichern der Statistiken in einer JSON-Datei
+        json_datei_name_kunden = "kunden_statistiken.json"
+        self.kunden_statistiken.to_json(json_datei_name_kunden, orient="records")
+        print(f"Die Daten wurden in die JSON-Datei '{json_datei_name_kunden}' exportiert.")
+
+        #ab hier verkaufsstatistiken----------------------------------------------
+
+        verkaufs_statistik = Counter(self.supermarkt.verkaufte_produkte)
+
+        # Zeige die Statistik an
+        print("\nVerkaufsstatistik:")
+        for produkt_id, anzahl in verkaufs_statistik.items():
+            produkt_name = produkt_db.get_produkt_name(produkt_id)
+            print(f"{produkt_name}: {anzahl} Stück verkauft")
+
+        # Erstelle DataFrame für die Verkaufsstatistik
+        verkaufs_df = pd.DataFrame(list(verkaufs_statistik.items()), columns=["Produkt_ID", "Verkaufte Menge"])
+        verkaufs_df["Produkt_Name"] = verkaufs_df["Produkt_ID"].apply(lambda x: produkt_db.get_produkt_name(x))
+        verkaufs_df["Preis pro Stück"] = verkaufs_df["Produkt_ID"].apply(lambda x: produkt_db.get_produkt_preis(x))
+        verkaufs_df["Umsatz"] = verkaufs_df["Verkaufte Menge"] * verkaufs_df["Preis pro Stück"]
+
+        # Gesamtumsatz berechnen
+        gesamtumsatz = verkaufs_df["Umsatz"].sum()
+
+        # Aktuelles Datum erhalten
+        aktuelles_datum = datetime.now().strftime("%Y-%m-%d")
+
+        # Speichere die Verkaufsstatistik in einer CSV-Datei
+        csv_datei_name_verkauf = f"verkaufs_statistik_{aktuelles_datum}.csv"
+        verkaufs_df.to_csv(csv_datei_name_verkauf, sep='\t', index=False)
+        print(f"Die Verkaufsstatistik wurde in die CSV-Datei '{csv_datei_name_verkauf}' exportiert.")
+
+        # Speichere die Verkaufsstatistik in einer JSON-Datei
+        json_datei_name_verkauf = f"verkaufs_statistik_{aktuelles_datum}.json"
+        verkaufs_df.to_json(json_datei_name_verkauf, orient="records")
+        print(f"Die Verkaufsstatistik wurde in die JSON-Datei '{json_datei_name_verkauf}' exportiert.")
+
+        if self.gesamtumsatz_statistik.empty:
+            self.gesamtumsatz_statistik = pd.DataFrame({
+                "Datum": [self.supermarkt.uhrzeit.strftime("%Y-%m-%d")],
+                "Gesamtumsatz": [gesamtumsatz],
+            })
+        else:
+            self.gesamtumsatz_statistik = pd.concat([self.gesamtumsatz_statistik, pd.DataFrame({
+                "Datum": [self.supermarkt.uhrzeit.strftime("%Y-%m-%d")],
+                "Gesamtumsatz": [gesamtumsatz],
+            })], ignore_index=True)
+
+        print("Statistiken:")
+        print(verkaufs_df)
+
+        # Eingebautes Datum für Gesamtumsatz-Dateinamen
+        gesamtumsatz_dateiname_datum = self.supermarkt.uhrzeit.strftime("%Y-%m-%d")
+
+        # Speichern der Gesamtumsatz-Statistiken in einer CSV-Datei
+        csv_datei_name_gesamtumsatz = f"gesamtumsatz_statistiken_{gesamtumsatz_dateiname_datum}.csv"
+        self.gesamtumsatz_statistik.to_csv(csv_datei_name_gesamtumsatz, index=False)
+        print(f"Die Gesamtumsatz-Daten wurden in die CSV-Datei '{csv_datei_name_gesamtumsatz}' exportiert.")
+
+        # Speichern der Gesamtumsatz-Statistiken in einer JSON-Datei
+        json_datei_name_gesamtumsatz = f"gesamtumsatz_statistiken_{gesamtumsatz_dateiname_datum}.json"
+        self.gesamtumsatz_statistik.to_json(json_datei_name_gesamtumsatz, orient="records")
+        print(f"Die Gesamtumsatz-Daten wurden in die JSON-Datei '{json_datei_name_gesamtumsatz}' exportiert.")
+
+if __name__ == "__main__":
+    main = Main()
+    main.starte_simulation()
+    main.zeige_statistiken()

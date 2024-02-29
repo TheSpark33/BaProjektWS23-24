@@ -1,0 +1,35 @@
+from datetime import datetime, timedelta
+import time
+from kunde import Kunde
+
+
+class SimulierteUhr:
+    def __init__(self, start_stunden=0, start_minuten=0):
+        self.zeit = datetime(2024, 1, 1, start_stunden, start_minuten)
+        self.uhrzeit = self.zeit
+
+    def aktualisiere_zeit(self, new_zeit):
+        self.zeit = new_zeit
+        self.uhrzeit = self.zeit
+
+    def zeige_aktuelle_zeit(self):
+        print(f"Aktuelle Uhrzeit: {self.zeit.strftime('%H:%M')}")
+
+    def simuliere_zeitverlauf(self, simuliertes_minuten_interval=1, simuliertes_zeitintervall_in_sekunden=0.125):
+        while True:
+            # Zeit aktualisieren (z.B. alle 1 simulierten Minute simulieren)
+
+            self.zeit += timedelta(minutes=simuliertes_minuten_interval)
+
+            # Zeit anzeigen
+            self.zeige_aktuelle_zeit()
+
+            # Warten für das nächste Intervall
+            time.sleep(simuliertes_zeitintervall_in_sekunden)
+
+
+# Beispiel-Nutzung der simulierten Uhr
+simulierte_uhr = SimulierteUhr(7, 0)
+
+# Simulierten Zeitverlauf starten (jede halbe Sekunde = 1 simulierte Minute)
+simulierte_uhr.simuliere_zeitverlauf()

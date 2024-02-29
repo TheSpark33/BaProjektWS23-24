@@ -1,0 +1,92 @@
+from datetime import datetime, timedelta
+import random
+#from kunde import Kunde
+import time
+import pdb
+import matplotlib.pyplot as plt
+import pandas as p
+from collections import Counter
+from produkt_db import ProduktDB, produkt_db
+
+class Supermarkt:
+    def __init__(self, name):
+        self.name = name
+        self.uhrzeit = datetime(2024, 1, 1, 7, 0, 0)  # Startzeit des Supermarkts
+        self.max_großeinkauf = 0
+        self.max_kleineinkauf = 0
+        self.max_spontaneinkauf = 0
+        self.verkaufte_produkte = []
+
+    def setze_uhrzeit(self, neue_uhrzeit):
+        self.uhrzeit = neue_uhrzeit
+
+    def berechne_kunden_abstand(self, anzahl_kunden):
+        kunden_abstand = (60 // anzahl_kunden) * 60
+        return kunden_abstand
+
+
+    def kunden_generieren(self):
+        großeinkauf = 0
+        kleineinkauf = 0
+        spontaneinkauf = 0
+
+        if 0 <= self.uhrzeit.hour <= 8:
+            großeinkauf = random.randint(5, 10)
+            kleineinkauf = random.randint(9, 16)
+            spontaneinkauf = random.randint(7, 14)
+        elif 9 <= self.uhrzeit.hour <= 12:
+            großeinkauf = random.randint(10, 20)
+            kleineinkauf = random.randint(11, 22)
+            spontaneinkauf = random.randint(3, 7)
+        elif 13 <= self.uhrzeit.hour <= 16:
+            großeinkauf = random.randint(12, 25)
+            kleineinkauf = random.randint(15, 28)
+            spontaneinkauf = random.randint(3, 6)
+        elif 17 <= self.uhrzeit.hour <= 20:
+            großeinkauf = random.randint(18, 25)
+            kleineinkauf = random.randint(20, 28)
+            spontaneinkauf = random.randint(1, 5)
+        elif 21 <= self.uhrzeit.hour <= 22:
+            großeinkauf = random.randint(12, 15)
+            kleineinkauf = random.randint(15, 18)
+            spontaneinkauf = random.randint(13, 25)
+
+        self.max_großeinkauf = großeinkauf
+        self.max_kleineinkauf = kleineinkauf
+        self.max_spontaneinkauf = spontaneinkauf
+
+        return großeinkauf, kleineinkauf, spontaneinkauf
+
+    def generiere_kunden_fuer_stunde(self, großeinkauf, kleineinkauf, spontaneinkauf, kunden_abstand, anzahl_kunden):
+        from kunde import Kunde
+        kunden = []
+
+        anzahl_kunden_pro_stunde = großeinkauf + kleineinkauf + spontaneinkauf
+        for i in range(anzahl_kunden_pro_stunde):
+            if i % kunden_abstand == 0:
+                kategorie = self.waehle_zufaellige_kategorie()
+                if kategorie == "GrossEinkaufsKunde" and großeinkauf > 0:
+                    kunden.append(Kunde(len(kunden) + 1, kategorie))
+                    großeinkauf -= 1
+                elif kategorie == "KleinEinkaufsKunde" and kleineinkauf > 0:
+                    kunden.append(Kunde(len(kunden) + 1, kategorie))
+                    kleineinkauf -= 1
+                elif kategorie == "SpontanEinkaufsKunde" and spontaneinkauf > 0:
+                    kunden.append(Kunde(len(kunden) + 1, kategorie))
+                    spontaneinkauf -= 1
+
+        return kunden
+
+    def waehle_zufaellige_kategorie(self):
+        kategorien = ["GrossEinkaufsKunde", "KleinEinkaufsKunde", "SpontanEinkaufsKunde"]
+        return random.choice(kategorien)
+
+    def betrete_kunden_in_supermarkt(self, kunden, kunden_abstand, großeinkauf, kleinkauf, spontaneinkauf):
+        print(großeinkauf + kleinkauf + spontaneinkauf)
+        print(kunden_abstand)
+        for kunde in kunden:
+            #self.uhrzeit += timedelta(seconds=kunden_abstand)
+            kunde.betrete_supermarkt(self)
+            kunde.kaufe_produkte(self)
+            kunde.zeige_einkaufswagen()
+            self.verkaufte_produkte.extend(kunde.einkaufswagen)

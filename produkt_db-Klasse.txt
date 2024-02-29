@@ -1,0 +1,131 @@
+import sqlite3
+
+class ProduktDB:
+    def __init__(self):
+        # Verbindung zur Datenbank herstellen (eine neue Datenbank wird erstellt, wenn sie nicht existiert)
+        self.conn = sqlite3.connect('meine_datenbank.db')
+        self.cursor = self.conn.cursor()
+
+        self.cursor.execute('DROP TABLE IF EXISTS Produkte')
+
+        # Tabelle 'Produkte' erstellen, wenn sie nicht existiert
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS Produkte (
+                produkt_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                preis REAL NOT NULL,
+                mhd DATE NOT NULL,
+                kategorie TEXT NOT NULL,
+                ekp REAL NOT NULL
+            )
+        ''')
+
+        # Änderungen speichern
+        self.conn.commit()
+
+        # Produkte zur Datenbank hinzufügen
+        produkte = [
+            ("Nutella 450G", 3.49, "01.01.2024", "Brotaufstrich", 3.00),
+            ("Gouda jung", 1.79, "01.01.2024", "Brotaufstrich", 1.50),
+            ("Tomatenmark", 1.09, "01.01.2024", "Sonstiges", 0.60),
+            ("Spaetzle 500g", 1.59, "01.01.2024", "Essen", 1.20),
+            ("Auflaufkaese", 1.29, "01.01.2024", "Essen", 0.01),
+            ("Reis-fit Langkorn", 2.29, "01.01.2024", "Essen", 1.80),
+            ("Choco Fresh 4+1", 1.19, "01.01.2024", "Schokolade", 1.18),
+            ("Weizentoast 500g", 0.99, "01.01.2024", "Brot", 0.40),
+            ("Hela Gewuerz Ketchup Mild", 1.99, "01.01.2024", "Essen-Beilage", 1.20),
+            ("Kinder Maxi King", 2.38, "01.01.2024", "Schokolade", 1.75),
+            ("Vitrex Mineralwasser Medium 6x 0,5L", 1.89, "01.01.2024", "Wasser", 1.45),
+            ("Prinzen Rolle Schoko 400G", 2.49, "01.06.2024", "Schokolade", 1.75),
+            ("Fuze Tea Lemon 0,4L", 1.29, "01.06.2024", "Eistee", 0.90),
+            ("Fuze Tea Peach 0,4L", 1.29, "01.06.2024", "Eistee", 0.90),
+            ("Chio Tortillas Wild Paprika 110G", 1.99, "01.05.2024", "Süßigkeiten", 1.29),
+            ("Funny-Frisch Chipsfrisch Ungarisch 150G", 2.29, "01.04.2024", "Süßigkeiten", 1.89),
+            ("Salzstangen 250G", 2.29, "01.06.2024", "Süßgkeiten", 1.89),
+            ("Fanta Orange 4x 0,5L PET", 4.99, "01.05.2024", "Limonade", 3.99),
+            ("Paulanger Spezi 0,33L", 0.89, "01.05.2024", "Limonade", 0.59),
+            ("Capri-Sun Multivitamin 10x 0,2L", 4.49, "01.07.2024", "Limonade", 3.79),
+            ("Red Bull Energy Drink 250ml", 1.49, "01.07.2024", "Energydrink", 0.99),
+            ("Monster Energydrink The Doctor 0,5L", 1.59, "01.07.2024", "Energydrink", 1.00),
+            ("Booster Original Energy Drink 0,33L", 0.79, "01.07.2024", "Energydrink", 0.49),
+            ("Rotkaeppchen Sekt mild 0,75L", 5.29, "01.08.2024", "Alkoholische-Getränke", 3.79),
+            ("Three Sixty Vodka 0,7L", 14.49, "01.01.2025", "Alkoholische-Getränke", 10.00),
+            ("Sierra Tequila Reposado 0,7L", 15.99, "01.01.2025", "Alkoholische-Getränke", 11.59),
+            ("Lavazza Caffe Crema Classico Bohne 1KG", 16.99, "01.06.2024", "Kaffee", 12.99),
+            ("Jacobs Kroenung Kaffee gemahlen 500G", 7.99, "01.06.2024", "Kaffee", 4.99),
+            ("Becks Pils 0,5L", 1.19, "01.08.2024", "Alkoholische-Getränke", 0.89),
+            ("Krombacher Pils 0,5L", 0.99, "01.08.2024", "Alkoholische-Getränke", 0.69),
+            ("Erdinger Alkoholfrei 0,5L", 1.19, "01.08.2024", "Alkoholische-Getränke", 0.79),
+            ("Milkana Sahne 190G", 2.99, "01.04.2024", "Brotaufstrich", 2.49),
+            ("Bifi Original 6ST 120G", 3.29, "01.05.2024", "Snack", 2.89),
+            ("Oreo O's Cereal 350G", 3.99, "01.06.2024", "Frühstück", 2.99),
+            ("Weetabix Minis Schokolade 500G", 4.49, "01.06.2024", "Frühstück", 3.79),
+            ("Koelln Muesli Knusper Schoko & Keks 500G", 3.89, "01.06.2024", "Frühstück", 2.99),
+            ("Ovomaltine Crunchy Cream 380G", 4.79, "01.07.2024", "Brotaufstrich", 3.99),
+            ("Lotus Biscoff Brotaufstrich 400G", 3.79, "01.07.2024", "Brotaufstrich", 2.99),
+            ("Milka Haselnusscreme 350G", 3.29, "01.07.2024", "Brotaufstrich", 2.79)
+
+
+
+        ]
+
+        for produkt in produkte:
+            self.add_produkt(*produkt)
+
+    def add_produkt(self, name, preis, mhd, kategorie, ekp):
+        # Produkt zur Datenbank hinzufügen
+        self.cursor.execute('''
+            INSERT INTO Produkte (name, preis, mhd, kategorie, ekp) VALUES (?, ?, ?, ?, ?)
+        ''', (name, preis, mhd, kategorie, ekp))
+
+        # Änderungen speichern
+        self.conn.commit()
+
+    def get_produkt_name(self, produkt_id):
+        # Produkt-Name anhand der Produkt-ID abfragen
+        self.cursor.execute('SELECT name FROM Produkte WHERE produkt_id = ?', (produkt_id,))
+        result = self.cursor.fetchone()
+        return result[0] if result else None
+
+    def get_produkt_preis(self, produkt_id):
+        # Produkt-Preis anhand der Produkt-ID abfragen
+        self.cursor.execute('SELECT preis FROM Produkte WHERE produkt_id = ?', (produkt_id,))
+        result = self.cursor.fetchone()
+        return result[0] if result else None
+
+    def get_produkt_kategorie(self, produkt_id):
+        # Produkt-Kategorie anhand der Produkt-ID abfragen
+        self.cursor.execute('SELECT kategorie FROM Produkte WHERE produkt_id = ?', (produkt_id,))
+        result = self.cursor.fetchone()
+        return result[0] if result else None
+
+    def get_zufaelliges_produkt(self):
+        # Hier rufst du ein zufälliges Produkt aus der Datenbank ab
+        self.cursor.execute('SELECT * FROM Produkte ORDER BY RANDOM() LIMIT 1')
+        result = self.cursor.fetchone()
+
+        if result:
+            return {"produkt_id": result[0], "name": result[1], "preis": result[2], "mhd": result[3],
+                    "kategorie": result[4], "ekp": result[5]}
+        else:
+            return None
+
+    def close_connection(self):
+        # Verbindung zur Datenbank schließen
+        self.conn.close()
+
+#Produkte die bereits drin sind
+"""("Nutella", 3.49, "01.01.2024", "Brotaufstrich", 3.00),
+            ("Gouda jung", 1.79, "01.01.2024", "Brotaufstrich", 1.50),
+            ("Tomatenmark", 1.09, "01.01.2024", "Sonstiges", 0.60),
+            ("Spaetzle 500g", 1.59, "01.01.2024", "Essen", 1.20),
+            ("Auflaufkaese", 1.29, "01.01.2024", "Essen",0.01),
+            ("Reis-fit Langkorn", 2.29, "01.01.2024", "Essen",1.80),
+            ("Choco Fresh 4+1", 1.19, "01.01.2024", "Schokolade", 1.18),
+            ("Weizentoast 500g", 0.99, "01.01.2024", "Brot", 0.40),
+            ("Hela Gewürz Ketchup Mild", 1.99, "01.01.2024", "Essen-Beilage", 1.20),
+            ("Kinder Maxi King", 2.38, "01.01.2024", "Schokolade", 1.75),
+            ("Vitrex Mineralwasser Medium 6x 0,5L", 1.89, "01.01.2024", "Wasser", 1.45)
+            # Füge hier weitere Produkte hinzu..."""
+# Erstelle eine Instanz der ProduktDB-Klasse (dies fügt die Produkte hinzu)
+produkt_db = ProduktDB()

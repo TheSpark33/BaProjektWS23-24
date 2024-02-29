@@ -1,0 +1,53 @@
+import unittest
+from main import Main
+from supermarkt import Supermarkt
+from kunde import Kunde
+import datetime
+
+class TestMain(unittest.TestCase):
+
+    def setUp(self):
+        # Initialisierung vor jedem Test, falls benötigt
+        self.main_instance = Main()
+
+    def test_kunden_generieren(self):
+        # Teste die Methode kunden_generieren in der Supermarkt-Klasse
+        großeinkauf, kleineinkauf, spontaneinkauf = self.main_instance.supermarkt.kunden_generieren()
+        self.assertIsInstance(großeinkauf, int)
+        self.assertGreater(großeinkauf, 0)
+        self.assertIsInstance(kleineinkauf, int)
+        self.assertGreater(kleineinkauf, 0)
+        self.assertIsInstance(spontaneinkauf, int)
+        self.assertGreater(spontaneinkauf, 0)
+
+    def test_berechne_kunden_abstand(self):
+        # Teste die Methode berechne_kunden_abstand in der Supermarkt-Klasse
+        anzahl_kunden = 30
+        kunden_abstand = self.main_instance.supermarkt.berechne_kunden_abstand(anzahl_kunden)
+        self.assertEqual(kunden_abstand, 120)
+
+    def test_kaufe_produkte(self):
+        # Teste die Methode kaufe_produkte in der Kunde-Klasse
+        # Erstelle ein Test-Objekt für den Supermarkt
+        class TestSupermarkt:
+            def __init__(self):
+                self.uhrzeit = datetime.datetime.strptime("10:00:00", "%H:%M:%S")
+
+        # Erstelle einen Kunden mit einer Kategorie deiner Wahl
+        kunde = Kunde(kundennummer=1, kategorie="GrossEinkaufsKunde")
+
+        # Rufe die Methode betrete_supermarkt auf
+        kunde.betrete_supermarkt(TestSupermarkt())
+
+        # Rufe die Methode kaufe_produkte auf
+        kunde.kaufe_produkte(TestSupermarkt())
+
+        # Überprüfe, ob der Einkaufswagen nicht leer ist
+        self.assertGreater(len(kunde.einkaufswagen), 0)
+
+    def tearDown(self):
+        # Aufräumen nach jedem Test, falls benötigt
+        pass
+
+if __name__ == '__main__':
+    unittest.main()

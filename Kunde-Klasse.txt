@@ -1,0 +1,130 @@
+import random
+from supermarkt import Supermarkt
+from produkt_db import ProduktDB, produkt_db
+
+
+class Kunde:
+    aktuelle_kundennummer = 0  # Klassenvariable für die fortlaufende Kundennummer
+
+    def __init__(self, kundennummer, kategorie):
+        Kunde.aktuelle_kundennummer += 1
+        self.kundennummer = Kunde.aktuelle_kundennummer
+        self.kategorie = kategorie
+        self.einkaufswagen = []
+    def betrete_supermarkt(self, supermarkt):
+        aktuelle_uhrzeit = supermarkt.uhrzeit.strftime("%H:%M:%S")
+        print(f"{aktuelle_uhrzeit}: Kunde {self.kundennummer} ({self.kategorie}) betritt den Supermarkt.")
+
+    def kaufe_produkte(self, supermarkt):
+        if self.kategorie == "GrossEinkaufsKunde":
+            # maxanzahl = 20
+            gewollt_anzahl = random.randint(15, 20)
+            akt_anzahl_produkte = 0
+            max_anzahl_produkte = 40
+            zu_teuer = []
+
+            for _ in range(gewollt_anzahl):
+                selected_produkt = produkt_db.get_zufaelliges_produkt()
+                produktnummer = selected_produkt["produkt_id"]
+                preis = selected_produkt["preis"]
+                ekp = selected_produkt["ekp"]
+
+                if akt_anzahl_produkte < max_anzahl_produkte:
+                    verfügbarer_platz = max_anzahl_produkte - akt_anzahl_produkte
+                    kaufen_wahrscheinlichkeit = ekp / preis
+                    kauf_entscheidung = \
+                    random.choices([True, False], weights=[kaufen_wahrscheinlichkeit, 1 - kaufen_wahrscheinlichkeit])[0]
+                    if produktnummer in zu_teuer or produktnummer in self.einkaufswagen:
+                        continue
+                    else:
+                        if kauf_entscheidung == True:
+                            wie_viele = 0
+                            if kauf_entscheidung <= 0.25:
+                                wie_viele = random.randint(1,2)
+                            elif 0.25 < kauf_entscheidung <= 0.5:
+                                wie_viele = random.randint(2,3)
+                            elif 0.5 < kauf_entscheidung:
+                                wie_viele = random.randint(2, 4)
+
+                            if wie_viele > verfügbarer_platz:
+                                wie_viele = verfügbarer_platz
+                            self.einkaufswagen.extend([produktnummer] * wie_viele)
+                            akt_anzahl_produkte = akt_anzahl_produkte + wie_viele
+                        else:
+                            zu_teuer.extend([produktnummer])
+
+        elif self.kategorie == "KleinEinkaufsKunde":
+            # maxanzahl = 10
+            gewollt_anzahl = random.randint(5, 10)
+            akt_anzahl_produkte = 0
+            max_anzahl_produkte = 25
+            zu_teuer = []
+
+            for _ in range(gewollt_anzahl):
+                selected_produkt = produkt_db.get_zufaelliges_produkt()
+                produktnummer = selected_produkt["produkt_id"]
+                preis = selected_produkt["preis"]
+                ekp = selected_produkt["ekp"]
+
+                if akt_anzahl_produkte < max_anzahl_produkte:
+                    verfügbarer_platz = max_anzahl_produkte - akt_anzahl_produkte
+                    kaufen_wahrscheinlichkeit = ekp / preis
+                    kauf_entscheidung = random.choices([True, False], weights=[kaufen_wahrscheinlichkeit, 1 - kaufen_wahrscheinlichkeit])[0]
+
+                    if produktnummer in zu_teuer or produktnummer in self.einkaufswagen:
+                        continue
+                    else:
+                        if kauf_entscheidung == True:
+                            wie_viele = 0
+                            if kauf_entscheidung <= 0.5:
+                                wie_viele = random.randint(1,2)
+                            elif 0.5 < kauf_entscheidung:
+                                wie_viele = random.randint(1, 3)
+
+                            if wie_viele > verfügbarer_platz:
+                                wie_viele = verfügbarer_platz
+                            self.einkaufswagen.extend([produktnummer]*wie_viele)
+                            akt_anzahl_produkte = akt_anzahl_produkte+ wie_viele
+                        else:
+                            zu_teuer.extend([produktnummer])
+
+        elif self.kategorie == "SpontanEinkaufsKunde":
+            # maxanzahl = 4
+            gewollt_anzahl = random.randint(1, 4)
+            akt_anzahl_produkte = 0
+            max_anzahl_produkte = 8
+            zu_teuer = []
+
+            for _ in range(gewollt_anzahl):
+                selected_produkt = produkt_db.get_zufaelliges_produkt()
+                produktnummer = selected_produkt["produkt_id"]
+                preis = selected_produkt["preis"]
+                ekp = selected_produkt["ekp"]
+
+                if akt_anzahl_produkte < max_anzahl_produkte:
+                    verfügbarer_platz = max_anzahl_produkte - akt_anzahl_produkte
+                    kaufen_wahrscheinlichkeit = ekp / preis
+                    kauf_entscheidung = \
+                    random.choices([True, False], weights=[kaufen_wahrscheinlichkeit, 1 - kaufen_wahrscheinlichkeit])[0]
+                    if produktnummer in zu_teuer or produktnummer in self.einkaufswagen:
+                        continue
+                    else:
+                        if kauf_entscheidung == True:
+                            wie_viele = 0
+                            if kauf_entscheidung <= 0.5:
+                                wie_viele = 1
+                            elif 0.5 < kauf_entscheidung:
+                                wie_viele = random.randint(1, 2)
+
+                            if wie_viele > verfügbarer_platz:
+                                wie_viele = verfügbarer_platz
+                            self.einkaufswagen.extend([produktnummer] * wie_viele)
+                            akt_anzahl_produkte = akt_anzahl_produkte + wie_viele
+                        else:
+                            zu_teuer.extend([produktnummer])
+
+    def zeige_einkaufswagen(self):
+        print(f"Kunde {self.kundennummer} ({self.kategorie}) hat folgende Produkte im Einkaufswagen:")
+        for produkt_id in self.einkaufswagen:
+            produkt_name = produkt_db.get_produkt_name(produkt_id)
+            print(f"- {produkt_name}")

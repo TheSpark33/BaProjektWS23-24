@@ -1,0 +1,51 @@
+class Produkt:
+    def __init__(self, produkt_id, name, preis, mhd, kategorie):
+        self.produkt_id = produkt_id
+        self.name = name
+        self.preis = preis
+        self.mhd = mhd  # Mindesthaltbarkeitsdatum
+        self.kategorie = kategorie
+
+    # Getter-Methoden
+    def get_produkt_id(self):
+        return self.produkt_id
+
+    def get_name(self, produkt_id):
+        if produkt_id == self.produkt_id:
+            return self.name
+        else:
+            print("Fehler: Es gibt kein Produkt mit dieser Produkt-ID")
+
+    def get_preis(self, produkt_id):
+        if produkt_id == self.produkt_id:
+            return self.preis
+        else:
+            print("Fehler: Es gibt kein Produkt mit dieser Produkt-ID")
+
+    def get_mhd(self, produkt_id):
+        if produkt_id == self.produkt_id:
+            return self.mhd
+        else:
+            print("Fehler: Es gibt kein Produkt mit dieser Produkt-ID")
+
+    def get_kategorie(self, produkt_id):
+        if produkt_id == self.produkt_id:
+            return self.kategorie
+        else:
+            print("Fehler: Es gibt kein Produkt mit dieser Produkt-ID")
+
+    # Setter-Methoden
+    def set_produkt_id(self, produkt_id):
+        self.produkt_id = produkt_id
+
+    def set_name(self, name):
+        self.name = name
+
+    def set_preis(self, preis):
+        self.preis = preis
+
+    def set_mhd(self, mhd):
+        self.mhd = mhd
+
+    def set_kategorie(self, kategorie):
+        self.kategorie = kategorie
